@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Monitor Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        .warning {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        .screen-info {
+            margin-top: 20px;
+            text-align: left;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monitor Detection System</h1>
+    <div id="result" class="result"></div>
+    <div id="screenInfo" class="screen-info"></div>
+
+    <script>
+        async function checkMultipleMonitors() {
+            try {
+                const resultDiv = document.getElementById('result');
+                const screenInfoDiv = document.getElementById('screenInfo');
+
+                // Get screen details using the API
+                const screenDetails = await window.getScreenDetails();
+                
+                // Check number of screens
+                const numberOfScreens = screenDetails.screens.length;
+                
+                if (numberOfScreens > 1) {
+                    resultDiv.className = 'result warning';
+                    resultDiv.textContent = `⚠️ Multiple monitors detected (${numberOfScreens} screens)! This is not allowed during the exam.`;
+                } else {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✅ Single monitor detected. You can proceed with the exam.';
+                }
+
+                // Display detailed screen information
+                let screenInfoHTML = '<h3>Connected Screens:</h3>';
+                screenDetails.screens.forEach((screen, index) => {
+                    screenInfoHTML += `
+                        <p><strong>Screen ${index + 1}:</strong></p>
+                        <ul>
+                            <li>Primary: ${screen.isPrimary ? 'Yes' : 'No'}</li>
+                            <li>Internal: ${screen.isInternal ? 'Yes' : 'No'}</li>
+                            <li>Resolution: ${screen.width} x ${screen.height}</li>
+                            <li>Device Pixel Ratio: ${screen.devicePixelRatio}</li>
+                            <li>Position: Left: ${screen.left}, Top: ${screen.top}</li>
+                        </ul>
+                    `;
+                });
+                screenInfoDiv.innerHTML = screenInfoHTML;
+
+            } catch (error) {
+                document.getElementById('result').className = 'result warning';
+                document.getElementById('result').textContent = '⚠️ Error detecting screens: ' + error.message;
+            }
+        }
+
+        // Run the check when the page loads
+        window.addEventListener('load', checkMultipleMonitors);
+
+        // Add a refresh button
+        const refreshButton = document.createElement('button');
+        refreshButton.textContent = 'Refresh Detection';
+        refreshButton.style.marginTop = '20px';
+        refreshButton.style.padding = '10px 20px';
+        refreshButton.style.fontSize = '16px';
+        refreshButton.style.cursor = 'pointer';
+        refreshButton.onclick = checkMultipleMonitors;
+        document.body.appendChild(refreshButton);
+
+        // Listen for screen changes
+        if (window.getScreenDetails) {
+            window.getScreenDetails().then(screenDetails => {
+                screenDetails.addEventListener('screenschange', checkMultipleMonitors);
+            });
+        }
+    </script>
+</body>
+</html> 
